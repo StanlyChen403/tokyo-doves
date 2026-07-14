@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>东京鸽子：武器大师完全版</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .phone-container {
+            width: 100%;
+            max-width: 412px;
+            height: 100vh;
+            max-height: 850px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .game-header {
+            background-color: #2c3e50;
+            color: #fff;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .game-title {
+            margin: 0;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+        }
+
+        .turn-indicator {
+            font-size: 0.9rem;
+            color: #f1c40f;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        .game-stage {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #ecf0f1;
+        }
+
+        .hand-container {
+            background-color: #fff;
+            border: 1px solid #bdc3c7;
+            border-radius: 8px;
+            padding: 8px;
+        }
+        
+        .hand-title {
+            font-size: 0.8rem;
+            margin: 0 0 5px 0;
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+
+        .hand-cards {
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+            padding-bottom: 3px;
+            min-height: 70px;
+        }
+
+        .card {
+            width: 50px;
+            height: 65px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            user-select: none;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .card.red-card {
+            background-color: #fde2e4;
+            border: 2px solid #e74c3c;
+            color: #c0392b;
+        }
+
+        .card.green-card {
+            background-color: #e8f8f5;
+            border: 2px solid #2ecc71;
+            color: #27ae60;
+        }
+
+        .card.selected {
+            transform: translateY(-8px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+            border-color: #e67e22 !important;
+        }
+
+        .card-icon {
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
+
+        .action-panel {
+            background-color: #fff;
+            border: 1px solid #bdc3c7;
+            border-radius: 8px;
+            padding: 6px;
+            text-align: center;
+            font-size: 0.8rem;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .board-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .battle-board {
+            display: grid;
+            gap: 6px;
+            background-color: #bdc3c7;
+            border-radius: 8px;
+            padding: 6px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+
+        .board-cell {
+            background-color: #ffffff;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            width: 60px;
+            height: 60px;
+        }
+
+        .board-cell.highlight-movable {
+            background-color: #d4efdf !important;
+            box-shadow: inset 0 0 8px #2ecc71;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+
+        .board-cell.highlight-placeable {
+            background-color: #fef9e7 !important;
+            border: 1px dashed #f1c40f;
+        }
+
+        .chess-piece {
+            width: 90%;
+            height: 90%;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        
+        .chess-piece.red {
+            background-color: #e74c3c;
+            color: white;
+            border: 2px solid #c0392b;
+        }
+
+        .chess-piece.green {
+            background-color: #2ecc71;
+            color: white;
+            border: 2px solid #27ae60;
+        }
+
+        .chess-piece.boss {
+            border: 3px double #fff;
+        }
+
+        .chess-piece.active-select {
+            transform: scale(1.05);
+            border: 3px solid #e67e22 !important;
+            box-shadow: 0 0 10px #e67e22;
+        }
+
+        .direction-tip {
+            font-size: 0.5rem;
+            opacity: 0.8;
+            margin-top: 1px;
+        }
+
+        .game-over-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 10;
+        }
+        .game-over-box {
+            text-align: center;
+            padding: 20px;
+            background: #2c3e50;
+            border-radius: 12px;
+            border: 2px solid #f1c40f;
+            width: 80%;
+        }
+        .restart-btn {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        <div class="game-over-overlay" id="game-over-screen" style="display: none;">
+            <div class="game-over-box">
+                <h2 id="winner-title" style="margin: 0 0 10px 0; font-size: 1.8rem;">🎉 红方获胜！</h2>
+                <p id="winner-reason" style="color: #bdc3c7; margin: 0;">对方大佬已被彻底合围！</p>
+                <button class="restart-btn" onclick="resetGame()">再来一局</button>
+            </div>
+        </div>
+        
+        <header class="game-header">
+            <h1 class="game-title">🐦 东京鸽子：武器大师</h1>
+            <div class="turn-indicator" id="turn-text">当前回合：🔴 红方（先手）</div>
+        </header>
+
+        <main class="game-stage">
+            <div class="hand-container">
+                <p class="hand-title">🔴 红方手牌 (点击选择)</p>
+                <div class="hand-cards" id="red-hand"></div>
+            </div>
+
+            <div class="action-panel" id="action-panel">
+                <span>💡 提示：点击手牌派牌，或点击场上棋子。</span>
+            </div>
+
+            <div class="board-container">
+                <div class="battle-board" id="board"></div>
+            </div>
+
+            <div class="hand-container">
+                <p class="hand-title">🟢 绿方手牌 (点击选择)</p>
+                <div class="hand-cards" id="green-hand"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let currentTurn = 'red'; 
+        let selectedHandCard = null; 
+        let selectedBoardPiece = null; 
+        let movableCells = []; 
+        let isGameOver = false;
+
+        const weaponTemplates = [
+            { id: 'machete', name: '砍刀', icon: '🔪', tip: '周围八向1格' },
+            { id: 'dagger',  name: '匕首', icon: '🗡️', tip: '上下左右1格' },
+            { id: 'pistol',  name: '手枪', icon: '🔫', tip: '斜角四向1格' },
+            { id: 'bat',     name: '棒球棍', icon: '🏏', tip: '直线任意格' },
+            { id: 'eagle',   name: '老鹰', icon: '🦅', tip: '日字跃迁' }
+        ];
+
+        let redHand = [];
+        let greenHand = [];
+        let boardMap = {};
+
+        function resetGame() {
+            currentTurn = 'red';
+            selectedHandCard = null;
+            selectedBoardPiece = null;
+            movableCells = [];
+            isGameOver = false;
+            document.getElementById('game-over-screen').style.display = 'none';
+
+            redHand = [ ...weaponTemplates.map(w => ({ ...w, isBoss: false })) ];
+            greenHand = [ ...weaponTemplates.map(w => ({ ...w, isBoss: false })) ];
+
+            boardMap = {};
+            // 开局两只大佬，紧挨在一起
+            boardMap["0,0"] = { player: 'red', id: 'boss', name: '大佬', icon: '👑', isBoss: true, tip: '周围八向1格' };
+            boardMap["0,1"] = { player: 'green', id: 'boss', name: '大佬', icon: '👑', isBoss: true, tip: '周围八向1格' };
+
+            renderHands();
+            renderDynamicBoard();
+            updateActionPanel();
+            updateTurnText();
+        }
+
+        window.onload = resetGame;
+
+        function renderHands() {
+            const redHandDiv = document.getElementById('red-hand');
+            const greenHandDiv = document.getElementById('green-hand');
+
+            redHandDiv.innerHTML = '';
+            redHand.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = `card red-card`;
+                if (selectedHandCard && selectedHandCard.player === 'red' && selectedHandCard.index === index) cardEl.classList.add('selected');
+                cardEl.innerHTML = `<span class="card-icon">${card.icon}</span>${card.name}`;
+                cardEl.onclick = () => selectCard('red', index);
+                redHandDiv.appendChild(cardEl);
+            });
+
+            greenHandDiv.innerHTML = '';
+            greenHand.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = `card green-card`;
+                if (selectedHandCard && selectedHandCard.player === 'green' && selectedHandCard.index === index) cardEl.classList.add('selected');
+                cardEl.innerHTML = `<span class="card-icon">${card.icon}</span>${card.name}`;
+                cardEl.onclick = () => selectCard('green', index);
+                greenHandDiv.appendChild(cardEl);
+            });
+        }
+
+        function selectCard(player, index) {
+            if (isGameOver) return;
+            if (player !== currentTurn) {
+                alert(`现在是 ${currentTurn === 'red' ? '🔴 红方' : '🟢 绿方'} 的回合！`);
+                return;
+            }
+            selectedBoardPiece = null;
+            movableCells = []; 
+
+            if (selectedHandCard && selectedHandCard.player === player && selectedHandCard.index === index) {
+                selectedHandCard = null;
+            } else {
+                selectedHandCard = { player, index, card: player === 'red' ? redHand[index] : greenHand[index] };
+            }
+            renderHands();
+            renderDynamicBoard();
+            updateActionPanel();
+        }
+
+        function getBoardBounds(tempMap = boardMap) {
+            let keys = Object.keys(tempMap);
+            if (keys.length === 0) return { minR: 0, maxR: 0, minC: 0, maxC: 0, width: 0, height: 0 };
+            
+            let rows = keys.map(k => parseInt(k.split(',')[0]));
+            let cols = keys.map(k => parseInt(k.split(',')[1]));
+            
+            let minR = Math.min(...rows);
+            let maxR = Math.max(...rows);
+            let minC = Math.min(...cols);
+            let maxC = Math.max(...cols);
+            
+            return {
+                minR, maxR, minC, maxC,
+                width: maxC - minC + 1,
+                height: maxR - minR + 1
+            };
+        }
+
+        function renderDynamicBoard() {
+            const boardDiv = document.getElementById('board');
+            boardDiv.innerHTML = '';
+
+            const bounds = getBoardBounds();
+
+            const displayMinR = bounds.minR - 1;
+            const displayMaxR = bounds.maxR + 1;
+            const displayMinC = bounds.minC - 1;
+            const displayMaxC = bounds.maxC + 1;
+
+            const rowsCount = displayMaxR - displayMinR + 1;
+            const colsCount = displayMaxC - displayMinC + 1;
+
+            boardDiv.style.gridTemplateRows = `repeat(${rowsCount}, 1fr)`;
+            boardDiv.style.gridTemplateColumns = `repeat(${colsCount}, 1fr)`;
+
+            for (let r = displayMinR; r <= displayMaxR; r++) {
+                for (let c = displayMinC; c <= displayMaxC; c++) {
+                    const key = `${r},${c}`;
+                    const piece = boardMap[key];
+
+                    const cellEl = document.createElement('div');
+                    cellEl.className = 'board-cell';
+                    
+                    const maxDim = Math.max(rowsCount, colsCount);
+                    const cellSize = Math.max(45, Math.min(65, 240 / maxDim)); 
+                    cellEl.style.width = `${cellSize}px`;
+                    cellEl.style.height = `${cellSize}px`;
+
+                    // 高亮放置检查
+                    if (selectedHandCard && !piece) {
+                        if (hasFriendlyNeighborInMap(selectedHandCard.player, r, c, boardMap)) {
+                            // 1. 检查放牌后是否超出 4x4
+                            let testMap = { ...boardMap, [key]: { player: selectedHandCard.player } };
+                            let testBounds = getBoardBounds(testMap);
+                            if (testBounds.width <= 4 && testBounds.height <= 4) {
+                                // 2. 🛡️ 【法官防护】：该空格是否在对方老大的上下左右？
+                                if (!isAdjacentToOpponentBoss(selectedHandCard.player, r, c)) {
+                                    cellEl.classList.add('highlight-placeable');
+                                }
+                            }
+                        }
+                    }
+
+                    const isMovable = movableCells.some(cell => cell[0] === r && cell[1] === c);
+                    if (isMovable) {
+                        cellEl.classList.add('highlight-movable');
+                    }
+
+                    if (piece) {
+                        const pieceEl = document.createElement('div');
+                        pieceEl.className = `chess-piece ${piece.player} ${piece.isBoss ? 'boss' : ''}`;
+                        if (selectedBoardPiece && selectedBoardPiece.r === r && selectedBoardPiece.c === c) {
+                            pieceEl.classList.add('active-select');
+                        }
+                        pieceEl.innerHTML = `<span style="font-size:0.9rem">${piece.icon}</span>${piece.name}<span class="direction-tip">${piece.tip}</span>`;
+                        cellEl.appendChild(pieceEl);
+                    }
+
+                    cellEl.onclick = () => handleCellClick(r, c);
+                    boardDiv.appendChild(cellEl);
+                }
+            }
+        }
+
+        // 🛡️ 核心判定算法：判断坐标 (r, c) 是不是直接挨着对方老大的上下左右（边相邻）
+        function isAdjacentToOpponentBoss(currentPlayer, r, c) {
+            const opponent = currentPlayer === 'red' ? 'green' : 'red';
+            // 四个正方向偏移：上、下、左、右
+            const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            
+            for (let [dr, dc] of dirs) {
+                const targetKey = `${r + dr},${c + dc}`;
+                const neighbor = boardMap[targetKey];
+                // 如果这个邻居存在，且是对方的棋子，并且是老大
+                if (neighbor && neighbor.player === opponent && neighbor.isBoss) {
+                    return true; // 贴着对方老大，属于违规区域！
+                }
+            }
+            return false;
+        }
+
+        function hasFriendlyNeighborInMap(player, r, c, map) {
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    if (dr === 0 && dc === 0) continue;
+                    if (map[`${r+dr},${c+dc}`] && map[`${r+dr},${c+dc}`].player === player) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function isFullyConnected(map) {
+            let keys = Object.keys(map);
+            let totalPieces = keys.length;
+            if (totalPieces <= 1) return true;
+
+            let startKey = keys[0];
+            let visited = {};
+            let queue = [startKey];
+            visited[startKey] = true;
+            let count = 0;
+
+            while (queue.length > 0) {
+                let curr = queue.shift();
+                count++;
+                let [r, c] = curr.split(',').map(Number);
+
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        if (dr === 0 && dc === 0) continue;
+                        let neighborKey = `${r+dr},${c+dc}`;
+                        if (map[neighborKey] && !visited[neighborKey]) {
+                            visited[neighborKey] = true;
+                            queue.push(neighborKey);
+                        }
+                    }
+                }
+            }
+            return count === totalPieces;
+        }
+
+        function calculateMovableCells(piece, startRow, startCol) {
+            let cells = [];
+            const bounds = getBoardBounds();
+            const searchMinR = bounds.minR - 1;
+            const searchMaxR = bounds.maxR + 1;
+            const searchMinC = bounds.minC - 1;
+            const searchMaxC = bounds.maxC + 1;
+
+            for (let r = searchMinR; r <= searchMaxR; r++) {
+                for (let c = searchMinC; c <= searchMaxC; c++) {
+                    const key = `${r},${c}`;
+                    if (boardMap[key]) continue; 
+
+                    const rowDiff = r - startRow;
+                    const colDiff = c - startCol;
+                    let valid = false;
+
+                    switch (piece.id) {
+                        case 'boss':    
+                        case 'machete': valid = Math.abs(rowDiff) <= 1 && Math.abs(colDiff) <= 1; break;
+                        case 'dagger':  valid = (Math.abs(rowDiff) === 1 && colDiff === 0) || (rowDiff === 0 && Math.abs(colDiff) === 1); break;
+                        case 'pistol':  valid = Math.abs(rowDiff) === 1 && Math.abs(colDiff) === 1; break;
+                        case 'bat':     if (rowDiff === 0 || colDiff === 0) valid = isPathClear(startRow, startCol, r, c); break;
+                        case 'eagle':   valid = (Math.abs(rowDiff) === 2 && Math.abs(colDiff) === 1) || (Math.abs(rowDiff) === 1 && Math.abs(colDiff) === 2); break;
+                    }
+
+                    if (valid) {
+                        let testMap = { ...boardMap };
+                        delete testMap[`${startRow},${startCol}`];
+                        testMap[key] = piece;
+
+                        let testBounds = getBoardBounds(testMap);
+                        if (testBounds.width <= 4 && testBounds.height <= 4) {
+                            if (isFullyConnected(testMap)) {
+                                cells.push([r, c]);
+                            }
+                        }
+                    }
+                }
+            }
+            return cells;
+        }
+
+        function isPathClear(r1, c1, r2, c2) {
+            if (r1 === r2) {
+                const start = Math.min(c1, c2) + 1, end = Math.max(c1, c2);
+                for (let c = start; c < end; c++) if (boardMap[`${r1},${c}`]) return false;
+            } else {
+                const start = Math.min(r1, r2) + 1, end = Math.max(r1, r2);
+                for (let r = start; r < end; r++) if (boardMap[`${r},${c1}`]) return false;
+            }
+            return true;
+        }
+
+        function handleCellClick(row, col) {
+            if (isGameOver) return;
+            const key = `${row},${col}`;
+            const clickedPiece = boardMap[key];
+
+            // 1. 派牌入场
+            if (selectedHandCard && !clickedPiece) {
+                if (!hasFriendlyNeighborInMap(selectedHandCard.player, row, col, boardMap)) {
+                    alert("【法官提示】❌ 新武器必须紧贴己方任意一个老队员！");
+                    return;
+                }
+
+                // 🚨 【法官安全防护 1】：不能直接空降在对方老大的正方向旁边！
+                if (isAdjacentToOpponentBoss(selectedHandCard.player, row, col)) {
+                    alert("【法官提示】❌ 违规放置！新上场的武器不能直接放在对方老大的正方向相邻处（上下左右）！");
+                    return;
+                }
+
+                // 2. 检查 4x4
+                let testMap = { ...boardMap, [key]: { player: selectedHandCard.player } };
+                let testBounds = getBoardBounds(testMap);
+                if (testBounds.width > 4 || testBounds.height > 4) {
+                    alert("【法官提示】❌ 放置失败！整场武器占用的网格最大不能超过 4x4 范围！");
+                    return;
+                }
+
+                const player = selectedHandCard.player;
+                const cardIndex = selectedHandCard.index;
+                const cardData = selectedHandCard.card;
+
+                boardMap[key] = { player, id: cardData.id, name: cardData.name, icon: cardData.icon, isBoss: false, tip: cardData.tip };
+                if (player === 'red') redHand.splice(cardIndex, 1);
+                else greenHand.splice(cardIndex, 1);
+
+                selectedHandCard = null;
+                postActionChecks();
+            }
+            // 2. 选中场上子
+            else if (!selectedHandCard && clickedPiece && clickedPiece.player === currentTurn) {
+                if (selectedBoardPiece && selectedBoardPiece.r === row && selectedBoardPiece.c === c) {
+                    selectedBoardPiece = null; movableCells = [];
+                } else {
+                    selectedBoardPiece = { r: row, c: col, piece: clickedPiece };
+                    movableCells = calculateMovableCells(clickedPiece, row, col);
+                }
+            }
+            // 3. 移动棋子
+            else if (selectedBoardPiece && !clickedPiece) {
+                const isMovable = movableCells.some(cell => cell[0] === row && cell[1] === col);
+                if (isMovable) {
+                    boardMap[key] = selectedBoardPiece.piece;
+                    delete boardMap[`${selectedBoardPiece.r},${selectedBoardPiece.c}`];
+                    selectedBoardPiece = null; movableCells = [];
+                    postActionChecks();
+                }
+            }
+            renderHands(); renderDynamicBoard(); updateActionPanel();
+        }
+
+        function postActionChecks() {
+            checkVictory();
+            if (!isGameOver) {
+                currentTurn = currentTurn === 'red' ? 'green' : 'red';
+                updateTurnText();
+            }
+        }
+
+        function checkVictory() {
+            let redBossKey = null, greenBossKey = null;
+            Object.keys(boardMap).forEach(k => {
+                if (boardMap[k].isBoss) {
+                    if (boardMap[k].player === 'red') redBossKey = k;
+                    else greenBossKey = k;
+                }
+            });
+
+            let redTrapped = isBossTrapped(redBossKey);
+            let greenTrapped = isBossTrapped(greenBossKey);
+
+            if (redTrapped && greenTrapped) {
+                showGameOver('平局！', '两位大佬同时被包围！');
+            } else if (redTrapped) {
+                showGameOver('🎉 绿方获胜！', '红方大佬已被彻底合围！');
+            } else if (greenTrapped) {
+                showGameOver('🎉 红方获胜！', '绿方大佬已被彻底合围！');
+            }
+        }
+
+        function isBossTrapped(key) {
+            let [r, c] = key.split(',').map(Number);
+            const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            for (let [dr, dc] of dirs) {
+                let nr = r + dr, nc = c + dc;
+                if (!boardMap[`${nr},${nc}`]) {
+                    let testMap = { ...boardMap, [`${nr},${nc}`]: { player: 'none' } };
+                    let testBounds = getBoardBounds(testMap);
+                    if (testBounds.width <= 4 && testBounds.height <= 4) {
+                        return false; 
+                    }
+                }
+            }
+            return true;
+        }
+
+        function showGameOver(title, reason) {
+            isGameOver = true;
+            document.getElementById('winner-title').innerText = title;
+            document.getElementById('winner-reason').innerText = reason;
+            document.getElementById('game-over-screen').style.display = 'flex';
+        }
+
+        function updateActionPanel() {
+            const panel = document.getElementById('action-panel');
+            if (selectedHandCard) panel.innerHTML = `<span>准备派 <b>[${selectedHandCard.card.name}]</b> 入场。黄色虚线已为你避开危险的老大相邻区。</span>`;
+            else if (selectedBoardPiece) {
+                const piece = selectedBoardPiece.piece;
+                let html = `<span>已选 <b>[${piece.name}]</b>：点击绿格移动`;
+                if (!piece.isBoss) html += `，或 </span><button class="action-btn" onclick="pickBackPiece()">收回</button>`;
+                else html += `（大佬不可收回）。</span>`;
+                panel.innerHTML = html;
+            } else panel.innerHTML = `<span>💡 提示：手牌可落子点亮起黄光，棋子可移动格点亮起绿光。</span>`;
+        }
+
+        function pickBackPiece() {
+            if (!selectedBoardPiece) return;
+            const { r, c, piece } = selectedBoardPiece;
+
+            let testMap = { ...boardMap };
+            delete testMap[`${r},${c}`];
+            
+            if (!isFullyConnected(testMap)) {
+                alert("【法官提示】❌ 不能收回！这会导致场上的其他武器断开连接！");
+                return;
+            }
+
+            delete boardMap[`${r},${c}`];
+            const restored = { id: piece.id, name: piece.name, icon: piece.icon, isBoss: false, tip: piece.tip };
+            if (piece.player === 'red') redHand.push(restored);
+            else greenHand.push(restored);
+
+            selectedBoardPiece = null; movableCells = [];
+            postActionChecks();
+            renderHands(); renderDynamicBoard(); updateActionPanel();
+        }
+
+        function updateTurnText() {
+            document.getElementById('turn-text').innerHTML = currentTurn === 'red' ? '当前回合：🔴 红方（先手）' : '当前回合：🟢 绿方（后手）';
+        }
+    </script>
+</body>
+</html>
