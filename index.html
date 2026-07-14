@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>东京鸽子：武器大师完全版</title>
+    <title>东京鸽子：武器大师 UI优化版</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            background-color: #f0f2f5;
+            background-color: #f5f6fa;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             display: flex;
             justify-content: center;
@@ -22,7 +22,7 @@
             height: 100vh;
             max-height: 850px;
             background-color: #ffffff;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -40,6 +40,7 @@
             margin: 0;
             font-size: 1.2rem;
             letter-spacing: 1px;
+            font-weight: 700;
         }
 
         .turn-indicator {
@@ -54,36 +55,41 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 10px;
-            background-color: #ecf0f1;
+            padding: 12px;
+            background-color: #f8f9fa; /* 干净优雅的战场大底色 */
         }
 
+        /* 手牌区 */
         .hand-container {
-            background-color: #fff;
-            border: 1px solid #bdc3c7;
-            border-radius: 8px;
-            padding: 8px;
+            background-color: #ffffff;
+            border: 1px solid #e1e8ed;
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
         }
         
         .hand-title {
-            font-size: 0.8rem;
-            margin: 0 0 5px 0;
-            color: #7f8c8d;
+            font-size: 0.75rem;
+            margin: 0 0 6px 0;
+            color: #95a5a6;
             font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .hand-cards {
             display: flex;
-            gap: 5px;
+            gap: 6px;
             overflow-x: auto;
-            padding-bottom: 3px;
-            min-height: 70px;
+            padding-bottom: 4px;
+            min-height: 72px;
         }
 
+        /* 鸽子手牌卡片 */
         .card {
             width: 50px;
-            height: 65px;
-            border-radius: 6px;
+            height: 68px;
+            border-radius: 8px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -91,28 +97,29 @@
             font-size: 0.7rem;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.05);
             user-select: none;
             flex-shrink: 0;
-            transition: all 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .card.red-card {
-            background-color: #fde2e4;
-            border: 2px solid #e74c3c;
+            background-color: #fff5f5;
+            border: 1.5px solid #ffccd5;
             color: #c0392b;
         }
 
         .card.green-card {
-            background-color: #e8f8f5;
-            border: 2px solid #2ecc71;
+            background-color: #f4fbf7;
+            border: 1.5px solid #d4edda;
             color: #27ae60;
         }
 
         .card.selected {
             transform: translateY(-8px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 16px rgba(230, 126, 34, 0.25);
             border-color: #e67e22 !important;
+            border-width: 2px;
         }
 
         .card-icon {
@@ -120,18 +127,20 @@
             margin-bottom: 2px;
         }
 
+        /* 操作控制台 */
         .action-panel {
-            background-color: #fff;
-            border: 1px solid #bdc3c7;
-            border-radius: 8px;
-            padding: 6px;
+            background-color: #ffffff;
+            border: 1px solid #e1e8ed;
+            border-radius: 10px;
+            padding: 8px;
             text-align: center;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             min-height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            color: #7f8c8d;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
         }
 
         .action-btn {
@@ -139,12 +148,15 @@
             color: white;
             border: none;
             padding: 4px 10px;
-            border-radius: 4px;
+            border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
             font-size: 0.75rem;
+            margin-left: 8px;
+            transition: background 0.2s;
         }
 
+        /* 👑 动态战场容器 */
         .board-container {
             flex: 1;
             display: flex;
@@ -155,90 +167,97 @@
 
         .battle-board {
             display: grid;
-            gap: 6px;
-            background-color: #bdc3c7;
-            border-radius: 8px;
-            padding: 6px;
+            gap: 8px;
+            /* 🔴 核心大改：移除了灰底色和内边距，让战场完全“无形” */
+            background-color: transparent; 
             box-sizing: border-box;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* 棋盘格子平时完全隐形 */
         .board-cell {
-            background-color: #ffffff;
-            border-radius: 4px;
+            background-color: transparent; /* 平时透明 */
+            border-radius: 8px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: all 0.2s;
             position: relative;
             width: 60px;
             height: 60px;
+            box-sizing: border-box;
+            transition: all 0.2s;
         }
 
-        .board-cell.highlight-movable {
-            background-color: #d4efdf !important;
-            box-shadow: inset 0 0 8px #2ecc71;
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 0.8; }
-            50% { opacity: 1; }
-            100% { opacity: 0.8; }
-        }
-
+        /* 👑 仅仅在可以放置手牌时，显示淡淡的虚线辅助框 */
         .board-cell.highlight-placeable {
-            background-color: #fef9e7 !important;
-            border: 1px dashed #f1c40f;
+            background-color: rgba(241, 196, 15, 0.05) !important;
+            border: 1.5px dashed rgba(241, 196, 15, 0.5) !important;
         }
 
+        /* 👑 仅仅在选中棋子可以移动时，显示淡淡的绿色辅助框 */
+        .board-cell.highlight-movable {
+            background-color: rgba(46, 204, 113, 0.05) !important;
+            border: 1.5px dashed rgba(46, 204, 113, 0.5) !important;
+            box-shadow: 0 0 8px rgba(46, 204, 113, 0.15);
+        }
+
+        /* 放在棋盘上的独立卡牌棋子 */
         .chess-piece {
-            width: 90%;
-            height: 90%;
-            border-radius: 6px;
+            width: 95%;
+            height: 95%;
+            border-radius: 8px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: bold;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            /* 像真实的实体卡牌一样，带有精致的阴影和边框 */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+            border-width: 1.5px;
+            border-style: solid;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
         }
         
         .chess-piece.red {
-            background-color: #e74c3c;
-            color: white;
-            border: 2px solid #c0392b;
+            background-color: #ffffff;
+            color: #c0392b;
+            border-color: #e74c3c;
         }
 
         .chess-piece.green {
-            background-color: #2ecc71;
-            color: white;
-            border: 2px solid #27ae60;
+            background-color: #ffffff;
+            color: #27ae60;
+            border-color: #2ecc71;
         }
 
+        /* 大佬特殊双重金色边框，突出领袖气质 */
         .chess-piece.boss {
-            border: 3px double #fff;
+            border: 3px double #f1c40f !important;
+            background-color: #fffdf0; /* 淡淡的金色底 */
         }
 
+        /* 选中的棋子高亮（卡牌微微上浮并带橙色发光） */
         .chess-piece.active-select {
-            transform: scale(1.05);
-            border: 3px solid #e67e22 !important;
-            box-shadow: 0 0 10px #e67e22;
+            transform: scale(1.05) translateY(-4px);
+            border-color: #e67e22 !important;
+            box-shadow: 0 6px 15px rgba(230, 126, 34, 0.2) !important;
         }
 
         .direction-tip {
             font-size: 0.5rem;
-            opacity: 0.8;
-            margin-top: 1px;
+            opacity: 0.6;
+            margin-top: 2px;
+            font-weight: normal;
         }
 
+        /* 游戏结束大弹窗 */
         .game-over-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.8);
+            background-color: rgba(44, 62, 80, 0.9);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -248,22 +267,24 @@
         }
         .game-over-box {
             text-align: center;
-            padding: 20px;
-            background: #2c3e50;
-            border-radius: 12px;
-            border: 2px solid #f1c40f;
-            width: 80%;
+            padding: 25px;
+            background: #ffffff;
+            color: #2c3e50;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 75%;
         }
         .restart-btn {
             margin-top: 15px;
-            padding: 10px 20px;
+            padding: 10px 24px;
             background-color: #2ecc71;
             color: white;
             border: none;
             font-size: 1rem;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
+            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.2);
         }
     </style>
 </head>
@@ -272,8 +293,8 @@
     <div class="phone-container">
         <div class="game-over-overlay" id="game-over-screen" style="display: none;">
             <div class="game-over-box">
-                <h2 id="winner-title" style="margin: 0 0 10px 0; font-size: 1.8rem;">🎉 红方获胜！</h2>
-                <p id="winner-reason" style="color: #bdc3c7; margin: 0;">对方大佬已被彻底合围！</p>
+                <h2 id="winner-title" style="margin: 0 0 10px 0; font-size: 1.6rem;">🎉 红方获胜！</h2>
+                <p id="winner-reason" style="color: #7f8c8d; margin: 0; font-size: 0.9rem;">对方大佬已被彻底合围！</p>
                 <button class="restart-btn" onclick="resetGame()">再来一局</button>
             </div>
         </div>
@@ -285,20 +306,21 @@
 
         <main class="game-stage">
             <div class="hand-container">
-                <p class="hand-title">🔴 红方手牌 (点击选择)</p>
+                <p class="hand-title">🔴 红方手牌</p>
                 <div class="hand-cards" id="red-hand"></div>
             </div>
 
             <div class="action-panel" id="action-panel">
-                <span>💡 提示：点击手牌派牌，或点击场上棋子。</span>
+                <span>💡 提示：点击手牌派牌，或点击场上卡牌。</span>
             </div>
 
+            <!-- 动态尺寸棋盘容器 -->
             <div class="board-container">
                 <div class="battle-board" id="board"></div>
             </div>
 
             <div class="hand-container">
-                <p class="hand-title">🟢 绿方手牌 (点击选择)</p>
+                <p class="hand-title">🟢 绿方手牌</p>
                 <div class="hand-cards" id="green-hand"></div>
             </div>
         </main>
@@ -436,28 +458,27 @@
                     cellEl.className = 'board-cell';
                     
                     const maxDim = Math.max(rowsCount, colsCount);
-                    const cellSize = Math.max(45, Math.min(65, 240 / maxDim)); 
+                    const cellSize = Math.max(48, Math.min(65, 240 / maxDim)); 
                     cellEl.style.width = `${cellSize}px`;
                     cellEl.style.height = `${cellSize}px`;
 
-                    // 高亮放置检查
+                    // 【全息投影】高亮放置检查
                     if (selectedHandCard && !piece) {
                         if (hasFriendlyNeighborInMap(selectedHandCard.player, r, c, boardMap)) {
-                            // 1. 检查放牌后是否超出 4x4
                             let testMap = { ...boardMap, [key]: { player: selectedHandCard.player } };
                             let testBounds = getBoardBounds(testMap);
                             if (testBounds.width <= 4 && testBounds.height <= 4) {
-                                // 2. 🛡️ 【法官防护】：该空格是否在对方老大的上下左右？
                                 if (!isAdjacentToOpponentBoss(selectedHandCard.player, r, c)) {
-                                    cellEl.classList.add('highlight-placeable');
+                                    cellEl.classList.add('highlight-placeable'); // 召唤亮色虚线
                                 }
                             }
                         }
                     }
 
+                    // 【全息投影】高亮移动检查
                     const isMovable = movableCells.some(cell => cell[0] === r && cell[1] === c);
                     if (isMovable) {
-                        cellEl.classList.add('highlight-movable');
+                        cellEl.classList.add('highlight-movable'); // 召唤亮色实线/虚线
                     }
 
                     if (piece) {
@@ -466,7 +487,7 @@
                         if (selectedBoardPiece && selectedBoardPiece.r === r && selectedBoardPiece.c === c) {
                             pieceEl.classList.add('active-select');
                         }
-                        pieceEl.innerHTML = `<span style="font-size:0.9rem">${piece.icon}</span>${piece.name}<span class="direction-tip">${piece.tip}</span>`;
+                        pieceEl.innerHTML = `<span style="font-size:1.1rem;margin-bottom:1px;">${piece.icon}</span>${piece.name}<span class="direction-tip">${piece.tip}</span>`;
                         cellEl.appendChild(pieceEl);
                     }
 
@@ -476,18 +497,15 @@
             }
         }
 
-        // 🛡️ 核心判定算法：判断坐标 (r, c) 是不是直接挨着对方老大的上下左右（边相邻）
         function isAdjacentToOpponentBoss(currentPlayer, r, c) {
             const opponent = currentPlayer === 'red' ? 'green' : 'red';
-            // 四个正方向偏移：上、下、左、右
             const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
             
             for (let [dr, dc] of dirs) {
                 const targetKey = `${r + dr},${c + dc}`;
                 const neighbor = boardMap[targetKey];
-                // 如果这个邻居存在，且是对方的棋子，并且是老大
                 if (neighbor && neighbor.player === opponent && neighbor.isBoss) {
-                    return true; // 贴着对方老大，属于违规区域！
+                    return true; 
                 }
             }
             return false;
@@ -601,13 +619,11 @@
                     return;
                 }
 
-                // 🚨 【法官安全防护 1】：不能直接空降在对方老大的正方向旁边！
                 if (isAdjacentToOpponentBoss(selectedHandCard.player, row, col)) {
                     alert("【法官提示】❌ 违规放置！新上场的武器不能直接放在对方老大的正方向相邻处（上下左右）！");
                     return;
                 }
 
-                // 2. 检查 4x4
                 let testMap = { ...boardMap, [key]: { player: selectedHandCard.player } };
                 let testBounds = getBoardBounds(testMap);
                 if (testBounds.width > 4 || testBounds.height > 4) {
@@ -628,7 +644,7 @@
             }
             // 2. 选中场上子
             else if (!selectedHandCard && clickedPiece && clickedPiece.player === currentTurn) {
-                if (selectedBoardPiece && selectedBoardPiece.r === row && selectedBoardPiece.c === c) {
+                if (selectedBoardPiece && selectedBoardPiece.r === row && selectedBoardPiece.c === col) {
                     selectedBoardPiece = null; movableCells = [];
                 } else {
                     selectedBoardPiece = { r: row, c: col, piece: clickedPiece };
@@ -702,14 +718,14 @@
 
         function updateActionPanel() {
             const panel = document.getElementById('action-panel');
-            if (selectedHandCard) panel.innerHTML = `<span>准备派 <b>[${selectedHandCard.card.name}]</b> 入场。黄色虚线已为你避开危险的老大相邻区。</span>`;
+            if (selectedHandCard) panel.innerHTML = `<span>准备派 <b>[${selectedHandCard.card.name}]</b> 入场。虚线为可放区域。</span>`;
             else if (selectedBoardPiece) {
                 const piece = selectedBoardPiece.piece;
-                let html = `<span>已选 <b>[${piece.name}]</b>：点击绿格移动`;
+                let html = `<span>已选 <b>[${piece.name}]</b>：点击虚线绿格移动`;
                 if (!piece.isBoss) html += `，或 </span><button class="action-btn" onclick="pickBackPiece()">收回</button>`;
                 else html += `（大佬不可收回）。</span>`;
                 panel.innerHTML = html;
-            } else panel.innerHTML = `<span>💡 提示：手牌可落子点亮起黄光，棋子可移动格点亮起绿光。</span>`;
+            } else panel.innerHTML = `<span>💡 提示：点击手牌或场上卡牌进行操作。平时战场完全隐形。</span>`;
         }
 
         function pickBackPiece() {
