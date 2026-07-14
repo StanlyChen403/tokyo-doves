@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>东京鸽子：武器大师 UI优化版</title>
+    <title>东京鸽子：武器大师 完美版</title>
     <style>
         body {
             margin: 0;
@@ -29,11 +29,13 @@
             position: relative;
         }
 
+        /* 顶部导航 */
         .game-header {
             background-color: #2c3e50;
             color: #fff;
             padding: 15px;
             text-align: center;
+            position: relative; 
         }
 
         .game-title {
@@ -41,6 +43,30 @@
             font-size: 1.2rem;
             letter-spacing: 1px;
             font-weight: 700;
+        }
+
+        /* 标题右上角优雅的问号按钮 */
+        .help-btn {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .help-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .turn-indicator {
@@ -56,7 +82,7 @@
             flex-direction: column;
             justify-content: space-between;
             padding: 12px;
-            background-color: #f8f9fa; /* 干净优雅的战场大底色 */
+            background-color: #f8f9fa; 
         }
 
         /* 手牌区 */
@@ -156,19 +182,19 @@
             transition: background 0.2s;
         }
 
-        /* 👑 动态战场容器 */
+        /* 动态战场容器 */
         .board-container {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 10px;
+            overflow: hidden;
         }
 
         .battle-board {
             display: grid;
             gap: 8px;
-            /* 🔴 核心大改：移除了灰底色和内边距，让战场完全“无形” */
             background-color: transparent; 
             box-sizing: border-box;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -176,30 +202,28 @@
 
         /* 棋盘格子平时完全隐形 */
         .board-cell {
-            background-color: transparent; /* 平时透明 */
+            background-color: transparent; 
             border-radius: 8px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
             position: relative;
-            width: 60px;
-            height: 60px;
             box-sizing: border-box;
             transition: all 0.2s;
         }
 
-        /* 👑 仅仅在可以放置手牌时，显示淡淡的虚线辅助框 */
+        /* 放置高光 */
         .board-cell.highlight-placeable {
-            background-color: rgba(241, 196, 15, 0.05) !important;
-            border: 1.5px dashed rgba(241, 196, 15, 0.5) !important;
+            background-color: rgba(241, 196, 15, 0.08) !important;
+            border: 2px dashed rgba(241, 196, 15, 0.7) !important;
         }
 
-        /* 👑 仅仅在选中棋子可以移动时，显示淡淡的绿色辅助框 */
+        /* 移动高光 */
         .board-cell.highlight-movable {
-            background-color: rgba(46, 204, 113, 0.05) !important;
-            border: 1.5px dashed rgba(46, 204, 113, 0.5) !important;
-            box-shadow: 0 0 8px rgba(46, 204, 113, 0.15);
+            background-color: rgba(46, 204, 113, 0.08) !important;
+            border: 2px dashed rgba(46, 204, 113, 0.7) !important;
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.25);
         }
 
         /* 放在棋盘上的独立卡牌棋子 */
@@ -211,46 +235,50 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-size: 0.75rem;
-            font-weight: bold;
-            /* 像真实的实体卡牌一样，带有精致的阴影和边框 */
             box-shadow: 0 4px 10px rgba(0,0,0,0.06);
             border-width: 1.5px;
             border-style: solid;
             box-sizing: border-box;
             transition: all 0.2s ease;
+            background-color: #ffffff;
+            overflow: hidden;
+            white-space: nowrap;
+            padding: 4px;
         }
         
         .chess-piece.red {
-            background-color: #ffffff;
             color: #c0392b;
             border-color: #e74c3c;
         }
 
         .chess-piece.green {
-            background-color: #ffffff;
             color: #27ae60;
             border-color: #2ecc71;
         }
 
-        /* 大佬特殊双重金色边框，突出领袖气质 */
+        /* 大佬特殊双重金色边框 */
         .chess-piece.boss {
             border: 3px double #f1c40f !important;
-            background-color: #fffdf0; /* 淡淡的金色底 */
+            background-color: #fffdf0; 
         }
 
-        /* 选中的棋子高亮（卡牌微微上浮并带橙色发光） */
+        /* 选中的棋子高亮 */
         .chess-piece.active-select {
             transform: scale(1.05) translateY(-4px);
             border-color: #e67e22 !important;
             box-shadow: 0 6px 15px rgba(230, 126, 34, 0.2) !important;
         }
 
-        .direction-tip {
-            font-size: 0.5rem;
-            opacity: 0.6;
-            margin-top: 2px;
-            font-weight: normal;
+        .piece-icon {
+            font-size: 1.3rem;
+            margin-bottom: 2px;
+            line-height: 1;
+        }
+
+        .piece-name {
+            font-size: 0.7rem;
+            font-weight: bold;
+            line-height: 1;
         }
 
         /* 游戏结束大弹窗 */
@@ -286,11 +314,168 @@
             font-weight: bold;
             box-shadow: 0 4px 10px rgba(46, 204, 113, 0.2);
         }
+
+        /* 👑 规则图鉴全屏弹窗 */
+        .rules-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(44, 62, 80, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .rules-box {
+            background: #ffffff;
+            width: 90%;
+            max-width: 360px;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 关闭按钮（右上角的叉） */
+        .close-rules-btn {
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            background: #f2f2f2;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #7f8c8d;
+            z-index: 21;
+        }
+
+        .rules-title {
+            margin: 0 0 15px 0;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-align: center;
+            color: #2c3e50;
+            border-bottom: 1.5px solid #f2f2f2;
+            padding-bottom: 8px;
+            width: 100%;
+        }
+
+        /* 👑 5x5 虚拟教学棋盘样式 */
+        .preview-board {
+            display: grid;
+            grid-template-rows: repeat(5, 1fr);
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+            background: #f5f6fa;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            padding: 6px;
+            width: 210px;
+            height: 210px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+
+        .preview-cell {
+            background: #ffffff;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1rem;
+            position: relative;
+        }
+
+        /* 5x5 棋盘中心放置要展示的武器 */
+        .preview-cell.center-piece {
+            background: #fffdf0;
+            border: 1.5px solid #f1c40f;
+            box-shadow: 0 2px 6px rgba(241, 196, 15, 0.2);
+            font-weight: bold;
+        }
+
+        /* 5x5 棋盘高亮可以移动的地方 */
+        .preview-cell.highlight-target {
+            background: rgba(46, 204, 113, 0.15) !important;
+            border: 1.5px dashed #2ecc71;
+            animation: pulse-glowing 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse-glowing {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        /* 底部切换按钮及描述 */
+        .preview-control {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .nav-btn {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: #34495e;
+        }
+
+        .weapon-desc-box {
+            text-align: center;
+            margin-top: 12px;
+            min-height: 70px;
+        }
+
+        .weapon-desc-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .weapon-desc-detail {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            margin: 6px 0 0 0;
+            line-height: 1.4;
+            max-width: 280px;
+        }
     </style>
 </head>
 <body>
 
     <div class="phone-container">
+        <!-- 游戏结束弹窗 -->
         <div class="game-over-overlay" id="game-over-screen" style="display: none;">
             <div class="game-over-box">
                 <h2 id="winner-title" style="margin: 0 0 10px 0; font-size: 1.6rem;">🎉 红方获胜！</h2>
@@ -298,9 +483,34 @@
                 <button class="restart-btn" onclick="resetGame()">再来一局</button>
             </div>
         </div>
+
+        <!-- 👑 规则说明书弹窗（升级为5x5图形幻灯片版） -->
+        <div class="rules-overlay" id="rules-screen" style="display: none;">
+            <div class="rules-box">
+                <button class="close-rules-btn" onclick="toggleRules(false)">❌</button>
+                <div class="rules-title">🛡️ 武器走法秘籍</div>
+                
+                <!-- 👑 5x5 图形化教学投影仪 -->
+                <div class="preview-board" id="preview-board"></div>
+
+                <!-- 介绍与描述 -->
+                <div class="weapon-desc-box">
+                    <h3 class="weapon-desc-title" id="preview-name">👑 大佬</h3>
+                    <p class="weapon-desc-detail" id="preview-desc">可向周围八个方向移动 1 格。作为核心，切记保护好自己别被彻底合围！</p>
+                </div>
+
+                <!-- 左右翻页控制器 -->
+                <div class="preview-control">
+                    <button class="nav-btn" onclick="navigatePreview(-1)">◀ 上一个</button>
+                    <button class="nav-btn" onclick="navigatePreview(1)">下一个 ▶</button>
+                </div>
+            </div>
+        </div>
         
         <header class="game-header">
             <h1 class="game-title">🐦 东京鸽子：武器大师</h1>
+            <!-- 问号按钮 -->
+            <button class="help-btn" onclick="toggleRules(true)">❓</button>
             <div class="turn-indicator" id="turn-text">当前回合：🔴 红方（先手）</div>
         </header>
 
@@ -314,7 +524,6 @@
                 <span>💡 提示：点击手牌派牌，或点击场上卡牌。</span>
             </div>
 
-            <!-- 动态尺寸棋盘容器 -->
             <div class="board-container">
                 <div class="battle-board" id="board"></div>
             </div>
@@ -345,6 +554,108 @@
         let greenHand = [];
         let boardMap = {};
 
+        // 👑 教学说明书数据集（共 6 种武器）
+        let currentPreviewIndex = 0;
+        const previewTemplates = [
+            {
+                id: 'boss',
+                name: '👑 大佬 (领袖)',
+                desc: '本方老大！可向周围八个方向移动 1 格。一旦被对方武器彻底堵死所有出路，游戏就输了（不可收回）。',
+                // 在 5x5 的格子里，哪些相对位置是高亮走法（中心是 2,2）
+                moves: [[1,1],[1,2],[1,3],[2,1],[2,3],[3,1],[3,2],[3,3]]
+            },
+            {
+                id: 'machete',
+                name: '🔪 砍刀 (护卫)',
+                desc: '贴身保镖！移动规则与大佬完全一致：可以往周围 8 个方向移动 1 格。是非常厚实的防守型卡牌。',
+                moves: [[1,1],[1,2],[1,3],[2,1],[2,3],[3,1],[3,2],[3,3]]
+            },
+            {
+                id: 'dagger',
+                name: '🗡️ 匕首 (突刺)',
+                desc: '快速穿插！只能向上、下、左、右移动 1 格。走直线卡位极其灵活。',
+                moves: [[1,2],[2,1],[2,3],[3,2]]
+            },
+            {
+                id: 'pistol',
+                name: '🔫 手枪 (潜行)',
+                desc: '幽灵暗杀！只能沿斜对角线的 4 个角移动 1 格。在卡牌的缝隙之间穿梭自如。',
+                moves: [[1,1],[1,3],[3,1],[3,3]]
+            },
+            {
+                id: 'bat',
+                name: '🏏 棒球棍 (远攻)',
+                desc: '长线压制！可以沿直线（横/竖）移动任意格。中途不能跨越其他任何棋子，卡位封锁的神器！',
+                moves: [
+                    [0,2],[1,2],[3,2],[4,2], // 竖线
+                    [2,0],[2,1],[2,3],[2,4]  // 横线
+                ]
+            },
+            {
+                id: 'eagle',
+                name: '🦅 老鹰 (奇袭)',
+                desc: '跨域突袭！跳跃式移动，走“日”字型（走2格转1格，国际象棋的马）。可以飞越沿途的所有障碍！',
+                moves: [[0,1],[0,3],[1,0],[1,4],[3,0],[3,4],[4,1],[4,3]]
+            }
+        ];
+
+        // 👑 控制说明书开关
+        function toggleRules(show) {
+            const rulesScreen = document.getElementById('rules-screen');
+            rulesScreen.style.display = show ? 'flex' : 'none';
+            if (show) {
+                currentPreviewIndex = 0; // 每次打开重置为大佬
+                renderPreviewBoard();
+            }
+        }
+
+        // 👑 渲染 5x5 动态教学棋盘
+        function renderPreviewBoard() {
+            const previewBoardDiv = document.getElementById('preview-board');
+            previewBoardDiv.innerHTML = '';
+            
+            const currentWeapon = previewTemplates[currentPreviewIndex];
+            
+            // 更新标题与文字描述
+            document.getElementById('preview-name').innerText = currentWeapon.name;
+            document.getElementById('preview-desc').innerText = currentWeapon.desc;
+
+            // 循环生成 5x5 网格 (r:0~4, c:0~4)
+            for (let r = 0; r < 5; r++) {
+                for (let c = 0; c < 5; c++) {
+                    const cellEl = document.createElement('div');
+                    cellEl.className = 'preview-cell';
+
+                    // 1. 中心位置放置角色
+                    if (r === 2 && c === 2) {
+                        cellEl.classList.add('center-piece');
+                        // 提取当前卡牌的符号
+                        cellEl.innerHTML = currentWeapon.name.split(' ')[0];
+                    }
+                    // 2. 检查当前坐标是否是该武器的可移动点
+                    else {
+                        const isHighlight = currentWeapon.moves.some(m => m[0] === r && m[1] === c);
+                        if (isHighlight) {
+                            cellEl.classList.add('highlight-target');
+                        }
+                    }
+
+                    previewBoardDiv.appendChild(cellEl);
+                }
+            }
+        }
+
+        // 👑 左右按钮换页
+        function navigatePreview(direction) {
+            currentPreviewIndex += direction;
+            if (currentPreviewIndex < 0) {
+                currentPreviewIndex = previewTemplates.length - 1; // 循环到最后一个
+            } else if (currentPreviewIndex >= previewTemplates.length) {
+                currentPreviewIndex = 0; // 循环回到第一个
+            }
+            renderPreviewBoard();
+        }
+
         function resetGame() {
             currentTurn = 'red';
             selectedHandCard = null;
@@ -352,12 +663,12 @@
             movableCells = [];
             isGameOver = false;
             document.getElementById('game-over-screen').style.display = 'none';
+            toggleRules(false); 
 
             redHand = [ ...weaponTemplates.map(w => ({ ...w, isBoss: false })) ];
             greenHand = [ ...weaponTemplates.map(w => ({ ...w, isBoss: false })) ];
 
             boardMap = {};
-            // 开局两只大佬，紧挨在一起
             boardMap["0,0"] = { player: 'red', id: 'boss', name: '大佬', icon: '👑', isBoss: true, tip: '周围八向1格' };
             boardMap["0,1"] = { player: 'green', id: 'boss', name: '大佬', icon: '👑', isBoss: true, tip: '周围八向1格' };
 
@@ -462,23 +773,23 @@
                     cellEl.style.width = `${cellSize}px`;
                     cellEl.style.height = `${cellSize}px`;
 
-                    // 【全息投影】高亮放置检查
+                    // 【全息投影】高亮放置
                     if (selectedHandCard && !piece) {
                         if (hasFriendlyNeighborInMap(selectedHandCard.player, r, c, boardMap)) {
                             let testMap = { ...boardMap, [key]: { player: selectedHandCard.player } };
                             let testBounds = getBoardBounds(testMap);
                             if (testBounds.width <= 4 && testBounds.height <= 4) {
                                 if (!isAdjacentToOpponentBoss(selectedHandCard.player, r, c)) {
-                                    cellEl.classList.add('highlight-placeable'); // 召唤亮色虚线
+                                    cellEl.classList.add('highlight-placeable'); 
                                 }
                             }
                         }
                     }
 
-                    // 【全息投影】高亮移动检查
+                    // 【全息投影】高亮移动
                     const isMovable = movableCells.some(cell => cell[0] === r && cell[1] === c);
                     if (isMovable) {
-                        cellEl.classList.add('highlight-movable'); // 召唤亮色实线/虚线
+                        cellEl.classList.add('highlight-movable'); 
                     }
 
                     if (piece) {
@@ -487,7 +798,7 @@
                         if (selectedBoardPiece && selectedBoardPiece.r === r && selectedBoardPiece.c === c) {
                             pieceEl.classList.add('active-select');
                         }
-                        pieceEl.innerHTML = `<span style="font-size:1.1rem;margin-bottom:1px;">${piece.icon}</span>${piece.name}<span class="direction-tip">${piece.tip}</span>`;
+                        pieceEl.innerHTML = `<span class="piece-icon">${piece.icon}</span><span class="piece-name">${piece.name}</span>`;
                         cellEl.appendChild(pieceEl);
                     }
 
@@ -556,10 +867,11 @@
         function calculateMovableCells(piece, startRow, startCol) {
             let cells = [];
             const bounds = getBoardBounds();
-            const searchMinR = bounds.minR - 1;
-            const searchMaxR = bounds.maxR + 1;
-            const searchMinC = bounds.minC - 1;
-            const searchMaxC = bounds.maxC + 1;
+
+            const searchMinR = bounds.minR - 4;
+            const searchMaxR = bounds.maxR + 4;
+            const searchMinC = bounds.minC - 4;
+            const searchMaxC = bounds.maxC + 4;
 
             for (let r = searchMinR; r <= searchMaxR; r++) {
                 for (let c = searchMinC; c <= searchMaxC; c++) {
@@ -722,10 +1034,10 @@
             else if (selectedBoardPiece) {
                 const piece = selectedBoardPiece.piece;
                 let html = `<span>已选 <b>[${piece.name}]</b>：点击虚线绿格移动`;
-                if (!piece.isBoss) html += `，或 </span><button class="action-btn" onclick="pickBackPiece()">收回</button>`;
+                if (!piece.isBoss) html += `，做 </span><button class="action-btn" onclick="pickBackPiece()">收回</button>`;
                 else html += `（大佬不可收回）。</span>`;
                 panel.innerHTML = html;
-            } else panel.innerHTML = `<span>💡 提示：点击手牌或场上卡牌进行操作。平时战场完全隐形。</span>`;
+            } else panel.innerHTML = `<span>💡 提示：点击手牌或场上卡牌。平时战场完全隐形。</span>`;
         }
 
         function pickBackPiece() {
