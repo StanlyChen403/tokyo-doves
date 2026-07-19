@@ -167,6 +167,14 @@
             color: #c0392b;
         }
 
+        .card.red-card .card-img {
+            transform: rotate(180deg);
+        }
+
+        .card.red-card.selected {
+            transform: translateY(4px) !important;
+        }
+
         .card.green-card {
             background-color: #f4fbf7;
             border: 1.5px solid #d4edda;
@@ -174,7 +182,7 @@
         }
 
         .card.selected {
-            transform: translateY(-8px);
+            transform: translateY(-4px);
             box-shadow: 0 8px 16px rgba(230, 126, 34, 0.25);
             border-color: #e67e22 !important;
             border-width: 2px;
@@ -276,47 +284,45 @@
             box-shadow: 0 0 10px rgba(46, 204, 113, 0.25);
         }
 
-        /* 放在棋盘上的独立卡牌棋子 */
+        /* 放在棋盘上的独立卡牌棋子：摒弃白色背景与卡片外框 */
         .chess-piece {
-            width: 95%;
-            height: 95%;
-            border-radius: 8px;
+            width: 100%;       /* 占满格子 */
+            height: 100%;      /* 占满格子 */
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-            border-width: 1.5px;
-            border-style: solid;
             box-sizing: border-box;
             transition: all 0.2s ease;
-            background-color: #ffffff;
+            background-color: transparent; /* 变为透明底，解脱空间 */
             overflow: hidden;
             white-space: nowrap;
-            padding: 4px;
+            padding: 0;        /* 彻底干掉内边距，给原图留空间 */
         }
         
+        /* 红绿阵营不再用 border，改用精美的纯图滤镜发光，视觉面积瞬间拉满 */
         .chess-piece.red {
-            color: #c0392b;
-            border-color: #e74c3c;
+            filter: drop-shadow(0px 2px 3px rgba(192, 41, 43, 0.8));
+            transform: rotate(180deg);
         }
 
         .chess-piece.green {
-            color: #27ae60;
-            border-color: #2ecc71;
+            filter: drop-shadow(0px 2px 3px rgba(39, 174, 96, 0.8));
         }
 
-        /* 大佬特殊双重金色边框 */
+        /* 大佬特殊双重金色发光引导 */
         .chess-piece.boss {
-            border: 3px double #f1c40f !important;
-            background-color: #fffdf0; 
+            filter: drop-shadow(0px 0px 4px #f1c40f) drop-shadow(0px 2px 3px rgba(0,0,0,0.3)) !important;
         }
 
-        /* 选中的棋子高亮 */
+        /* 选中的棋子高亮：微妙放大并加深阴影 */
         .chess-piece.active-select {
-            transform: scale(1.05) translateY(-4px);
-            border-color: #e67e22 !important;
-            box-shadow: 0 6px 15px rgba(230, 126, 34, 0.2) !important;
+            transform: scale(1.15) translateY(-2px);
+            filter: drop-shadow(0px 5px 6px rgba(230, 126, 34, 0.9)) !important;
+        }
+
+        .chess-piece.red.active-select {
+            transform: scale(1.15) translateY(2px) rotate(180deg) !important;
         }
 
         .piece-icon {
@@ -332,7 +338,6 @@
         }
 
         /* 游戏结束大弹窗 */
-        /* 游戏结束大弹窗（默认全屏遮挡） */
         .game-over-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -355,7 +360,6 @@
         }
 
         /* 确保弹窗内的盒子在复盘模式下依然可以点击按钮 */
-        /* 确保弹窗内的盒子在复盘模式下依然可以点击按钮，并修正文字颜色 */
         .game-over-overlay.review-mode .game-over-box {
             pointer-events: auto;
             box-shadow: 0 4px 20px rgba(0,0,0,0.4);
@@ -545,10 +549,16 @@
             max-width: 280px;
         }
 
-        /* ✨ 新增：手牌与棋盘棋子的图片样式 */
-        .card-img, .piece-img {
-            width: 95%;       /* 让图片宽度占比变大 */
-            height: 95%;      /* 让图片高度占比变大 */
+        /* ✨ 增强：手牌与棋盘棋子的图片样式 */
+        .card-img {
+            width: 95%;
+            height: 95%;
+            object-fit: contain;
+        }
+        
+        .piece-img {
+            width: 100%;       /* 棋盘图片 100% 撑满 */
+            height: 100%;      /* 棋盘图片 100% 撑满 */
             object-fit: contain;
         }
 
@@ -831,7 +841,7 @@
 
             boardMap = {};
             boardMap["0,0"] = { player: 'red', id: '0', name: '大佬', icon: '👑', isBoss: true, tip: '周围八向1格' };
-            boardMap["0,1"] = { player: 'green', id: '0', name: '大佬', icon: '👑', isBoss: true, tip: '周围八向1格' };
+            boardMap["1,0"] = { player: 'green', id: '0', name: '大佬', icon: '👑', isBoss: true, tip: '周围八向1格' };
 
             // 刷新分数板显示
             document.getElementById('score-red-text').innerText = `🔴 红方 ${redScore}`;
@@ -944,7 +954,7 @@
                     cellEl.className = 'board-cell';
                     
                     const maxDim = Math.max(rowsCount, colsCount);
-                    const cellSize = Math.max(48, Math.min(65, 240 / maxDim)); 
+                    const cellSize = Math.max(52, Math.min(75, 290 / maxDim));
                     cellEl.style.width = `${cellSize}px`;
                     cellEl.style.height = `${cellSize}px`;
 
