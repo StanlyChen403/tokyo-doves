@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>东京鸽子：武器大师 完美版</title>
     <style>
+        /* 升级：背景支持动态回合颜色引导 */
         body {
             margin: 0;
             padding: 0;
@@ -14,7 +15,38 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            transition: background-color 0.4s ease; /* 顺滑的背景色过渡 */
         }
+
+        /* 当是红方回合时，大背景变淡红引导 */
+        body.red-turn-bg {
+            background-color: #fff0f0;
+        }
+
+        /* 当是绿方回合时，大背景变淡绿引导 */
+        body.green-turn-bg {
+            background-color: #f0fbf4;
+        }
+
+        /* ✨ 新增：顶部优雅的记分板 */
+        .score-board {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .score-red { color: #ff7675; }
+        .score-divider { color: #fff; opacity: 0.6; }
+        .score-green { color: #55efc4; }
 
         .phone-container {
             width: 100%;
@@ -282,25 +314,49 @@
         }
 
         /* 游戏结束大弹窗 */
+        /* 游戏结束大弹窗（默认全屏遮挡） */
         .game-over-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(44, 62, 80, 0.9);
+            background-color: rgba(44, 62, 80, 0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             color: white;
             z-index: 10;
+            transition: all 0.3s ease; /* 增加平滑动画 */
         }
-        .game-over-box {
-            text-align: center;
-            padding: 25px;
-            background: #ffffff;
-            color: #2c3e50;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            width: 75%;
+
+        /* ✨ 新增：复盘观看死因模式 */
+        .game-over-overlay.review-mode {
+            background-color: rgba(44, 62, 80, 0.2); /* 背景变极度透明 */
+            justify-content: flex-end; /* 弹窗盒子沉到底部，把战场空出来 */
+            padding-bottom: 20px;
+            pointer-events: none; /* 允许手指透过空隙点击棋盘（如果需要） */
+        }
+
+        /* 确保弹窗内的盒子在复盘模式下依然可以点击按钮 */
+        /* 确保弹窗内的盒子在复盘模式下依然可以点击按钮，并修正文字颜色 */
+        .game-over-overlay.review-mode .game-over-box {
+            pointer-events: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            background: rgba(255, 255, 255, 0.95); /* 略带一点毛玻璃高级感 */
+            color: #2c3e50 !important; /* ✨ 新增这行：强行让复盘时的文字变成清晰的深蓝色 */
+        }
+
+        /* 复盘/查看战场按钮样式 */
+        .review-btn {
+            margin-top: 15px;
+            margin-right: 8px;
+            padding: 10px 16px;
+            background-color: #7f8c8d;
+            color: white;
+            border: none;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
         }
         .restart-btn {
             margin-top: 15px;
@@ -511,6 +567,14 @@
             <h1 class="game-title">🐦 东京鸽子：武器大师</h1>
             <!-- 问号按钮 -->
             <button class="help-btn" onclick="toggleRules(true)">❓</button>
+            
+            <!-- ✨ 新增：持久化实时记分板 -->
+            <div class="score-board">
+                <span class="score-red" id="score-red-text">🔴 红方 0</span>
+                <span class="score-divider">:</span>
+                <span class="score-green" id="score-green-text">0 🟢 绿方</span>
+            </div>
+
             <div class="turn-indicator" id="turn-text">当前回合：🔴 红方（先手）</div>
         </header>
 
@@ -536,11 +600,18 @@
     </div>
 
     <script>
+
+        // ✨ 新增：全局分数记录器（刷新网页才会清零，点再来一局不清零）
+        let redScore = 0;
+        let greenScore = 0;
+
         let currentTurn = 'red'; 
         let selectedHandCard = null; 
         let selectedBoardPiece = null; 
         let movableCells = []; 
         let isGameOver = false;
+
+        
 
         const weaponTemplates = [
             { id: 'machete', name: '砍刀', icon: '🔪', tip: '周围八向1格' },
@@ -657,7 +728,9 @@
         }
 
         function resetGame() {
-            currentTurn = 'red';
+            // ✨ 改进一：随机决定谁是先手
+            currentTurn = Math.random() < 0.5 ? 'red' : 'green';
+            
             selectedHandCard = null;
             selectedBoardPiece = null;
             movableCells = [];
@@ -672,10 +745,14 @@
             boardMap["0,0"] = { player: 'red', id: 'boss', name: '大佬', icon: '👑', isBoss: true, tip: '周围八向1格' };
             boardMap["0,1"] = { player: 'green', id: 'boss', name: '大佬', icon: '👑', isBoss: true, tip: '周围八向1格' };
 
+            // 刷新分数板显示
+            document.getElementById('score-red-text').innerText = `🔴 红方 ${redScore}`;
+            document.getElementById('score-green-text').innerText = `${greenScore} 🟢 绿方`;
+
             renderHands();
             renderDynamicBoard();
             updateActionPanel();
-            updateTurnText();
+            updateTurnText(); // 里面包含背景颜色引导逻辑
         }
 
         window.onload = resetGame;
@@ -999,8 +1076,14 @@
             if (redTrapped && greenTrapped) {
                 showGameOver('平局！', '两位大佬同时被包围！');
             } else if (redTrapped) {
+                // ✨ 改进三：绿方获胜，绿方分数+1
+                greenScore++;
+                document.getElementById('score-green-text').innerText = `${greenScore} 🟢 绿方`;
                 showGameOver('🎉 绿方获胜！', '红方大佬已被彻底合围！');
             } else if (greenTrapped) {
+                // ✨ 改进三：红方获胜，红方分数+1
+                redScore++;
+                document.getElementById('score-red-text').innerText = `🔴 红方 ${redScore}`;
                 showGameOver('🎉 红方获胜！', '绿方大佬已被彻底合围！');
             }
         }
@@ -1021,11 +1104,43 @@
             return true;
         }
 
+        // 升级版游戏结束弹窗
         function showGameOver(title, reason) {
             isGameOver = true;
             document.getElementById('winner-title').innerText = title;
             document.getElementById('winner-reason').innerText = reason;
-            document.getElementById('game-over-screen').style.display = 'flex';
+            
+            const screen = document.getElementById('game-over-screen');
+            screen.classList.remove('review-mode'); // 每次刚结束时，确保是全屏震撼展示
+            screen.style.display = 'flex';
+
+            // 动态注入“查看棋盘/死因”的切换按钮，防止重复叠加
+            const box = screen.querySelector('.game-over-box');
+            if (!document.getElementById('toggle-review-btn')) {
+                const reviewBtn = document.createElement('button');
+                reviewBtn.id = 'toggle-review-btn';
+                reviewBtn.className = 'review-btn';
+                reviewBtn.innerText = '查看死因';
+                reviewBtn.onclick = toggleReviewMode;
+                // 把查看死因按钮插在“再来一局”的前面
+                box.insertBefore(reviewBtn, box.querySelector('.restart-btn'));
+            } else {
+                document.getElementById('toggle-review-btn').innerText = '查看死因';
+            }
+        }
+
+        // ✨ 核心黑科技：一键切换“全屏结算”与“底部透明复盘”
+        function toggleReviewMode() {
+            const screen = document.getElementById('game-over-screen');
+            const btn = document.getElementById('toggle-review-btn');
+            
+            if (screen.classList.contains('review-mode')) {
+                screen.classList.remove('review-mode');
+                btn.innerText = '查看死因';
+            } else {
+                screen.classList.add('review-mode');
+                btn.innerText = '返回结算';
+            }
         }
 
         function updateActionPanel() {
@@ -1063,7 +1178,19 @@
         }
 
         function updateTurnText() {
-            document.getElementById('turn-text').innerHTML = currentTurn === 'red' ? '当前回合：🔴 红方（先手）' : '当前回合：🟢 绿方（后手）';
+            // 更新提示文字，同时标注出谁是随机到的幸运先手
+            const isFirstTurn = (redHand.length === 5 && greenHand.length === 5 && Object.keys(boardMap).length === 2);
+            const firstHandTag = isFirstTurn ? '（随机先手）' : '';
+
+            if (currentTurn === 'red') {
+                document.getElementById('turn-text').innerHTML = `当前回合：🔴 红方${firstHandTag}`;
+                // ✨ 改进二：引导大背景变红
+                document.body.className = 'red-turn-bg';
+            } else {
+                document.getElementById('turn-text').innerHTML = `当前回合：🟢 绿方${firstHandTag}`;
+                // ✨ 改进二：引导大背景变绿
+                document.body.className = 'green-turn-bg';
+            }
         }
     </script>
 </body>
