@@ -551,6 +551,25 @@
             height: 95%;      /* 让图片高度占比变大 */
             object-fit: contain;
         }
+
+        /* ✨ 新增：左上角换肤头像按钮样式 */
+        .skin-toggle-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            background-color: #fff;
+            cursor: pointer;
+            object-fit: contain;
+            transition: transform 0.2s, border-color 0.2s;
+            vertical-align: middle;
+            margin-right: 8px; /* 让头像和标题文字之间留点空隙 */
+        }
+
+        .skin-toggle-btn:hover {
+            transform: scale(1.1);
+            border-color: #f1c40f;
+        }
     </style>
 </head>
 <body>
@@ -589,7 +608,9 @@
         </div>
         
         <header class="game-header">
-            <h1 class="game-title">🐦 东京鸽子：武器大师</h1>
+            <h1 class="game-title">
+                <img src="DOVE_B/0.png" class="skin-toggle-btn" id="skin-logo" onclick="switchSkin()" title="点击切换皮肤">东京鸽子：武器大师
+            </h1>
             <!-- 问号按钮 -->
             <button class="help-btn" onclick="toggleRules(true)">❓</button>
             
@@ -658,45 +679,71 @@
         let greenHand = [];
         let boardMap = {};
 
-        // 👑 教学说明书数据集（共 6 种武器）
+        // 全局皮肤状态，默认 'pig'，可选 'dove'
+        let currentSkin = 'dove'; 
+
+        function switchSkin() {
+            // 1. 切换皮肤状态
+            currentSkin = (currentSkin === 'pig') ? 'dove' : 'pig';
+            
+            // 2. 更新左上角的 Logo 图片
+            const logoEl = document.getElementById('skin-logo');
+            if (currentSkin === 'pig') {
+                logoEl.src = 'PIG_B/0.png'; 
+                alert("✨ 已切换为：元气猪猪皮肤模式！");
+            } else {
+                logoEl.src = 'DOVE_B/0.png'; 
+                alert("🐦 已切换为：原版经典鸽子皮肤模式！");
+            }
+            
+            // 🚨【终极修复的核心】：先让 updateTurnText() 执行换肤的背景图重绘！
+            // 并且我们不再去主动 .remove() 旧标签，而是让它在 updateTurnText 内部直接覆盖样式，
+            // 这样背景图在内存里会无缝交接，绝不会出现退化为空白的情况！
+            updateTurnText(); 
+            
+            // 3. 最后重新刷新手牌和棋盘棋子
+            renderHands();
+            renderDynamicBoard();
+        }
+
+        // 👑 教学说明书数据集：将 id 统一修改为对应的数字，与图片文件名完美挂钩
         let currentPreviewIndex = 0;
         const previewTemplates = [
             {
-                id: 'boss',
+                id: '0', // 大佬对应 0.png
                 name: '👑 大佬 (领袖)',
                 desc: '本方老大！可向周围八个方向移动 1 格。一旦被对方武器彻底堵死所有出路，游戏就输了（不可收回）。',
-                // 在 5x5 的格子里，哪些相对位置是高亮走法（中心是 2,2）
                 moves: [[1,1],[1,2],[1,3],[2,1],[2,3],[3,1],[3,2],[3,3]]
             },
             {
-                id: 'machete',
+                id: '1', // 砍刀对应 1.png
                 name: '🔪 砍刀 (护卫)',
                 desc: '贴身保镖！移动规则与大佬完全一致：可以往周围 8 个方向移动 1 格。是非常厚实的防守型卡牌。',
                 moves: [[1,1],[1,2],[1,3],[2,1],[2,3],[3,1],[3,2],[3,3]]
             },
             {
-                id: 'dagger',
+                id: '2', // 匕首对应 2.png
                 name: '🗡️ 匕首 (突刺)',
                 desc: '快速穿插！只能向上、下、左、右移动 1 格。走直线卡位极其灵活。',
                 moves: [[1,2],[2,1],[2,3],[3,2]]
             },
             {
-                id: 'pistol',
+                id: '3', // 手枪对应 3.png
                 name: '🔫 手枪 (潜行)',
                 desc: '幽灵暗杀！只能沿斜对角线的 4 个角移动 1 格。在卡牌的缝隙之间穿梭自如。',
                 moves: [[1,1],[1,3],[3,1],[3,3]]
             },
             {
-                id: 'bat',
+                id: '4', // 棒球棍对应 4.png
                 name: '🏏 棒球棍 (远攻)',
                 desc: '长线压制！可以沿直线（横/竖）移动任意格。中途不能跨越其他任何棋子，卡位封锁的神器！',
                 moves: [
-                    [0,2],[1,2],[3,2],[4,2], // 竖线
-                    [2,0],[2,1],[2,3],[2,4]  // 横线
+                    [0,2],[1,2],[3,2],[4,2],
+                    [2,0],[2,1],[2,3],[2,4]
                 ]
             },
             {
-                id: 'eagle',
+                id: '5', // 老鹰对应 5.png
                 name: '🦅 老鹰 (奇袭)',
                 desc: '跨域突袭！跳跃式移动，走“日”字型（走2格转1格，国际象棋的马）。可以飞越沿途的所有障碍！',
                 moves: [[0,1],[0,3],[1,0],[1,4],[3,0],[3,4],[4,1],[4,3]]
@@ -713,14 +760,14 @@
             }
         }
 
-        // 👑 渲染 5x5 动态教学棋盘
+        // 👑 升级版：渲染 5x5 动态教学棋盘（完美支持全套图片与双皮肤切换）
         function renderPreviewBoard() {
             const previewBoardDiv = document.getElementById('preview-board');
             previewBoardDiv.innerHTML = '';
             
             const currentWeapon = previewTemplates[currentPreviewIndex];
             
-            // 更新标题与文字描述
+            // 更新描述界面的标题与文字
             document.getElementById('preview-name').innerText = currentWeapon.name;
             document.getElementById('preview-desc').innerText = currentWeapon.desc;
 
@@ -730,13 +777,21 @@
                     const cellEl = document.createElement('div');
                     cellEl.className = 'preview-cell';
 
-                    // 1. 中心位置放置角色
+                    // 1. 中心位置放置当前选中的武器图片
                     if (r === 2 && c === 2) {
                         cellEl.classList.add('center-piece');
-                        // 提取当前卡牌的符号
-                        cellEl.innerHTML = currentWeapon.name.split(' ')[0];
+                        
+                        // ✨ 核心修改：根据当前皮肤状态，动态决定去哪里抓说明书里的图片
+                        // 统一读取绿方（B）文件夹下的图片作为中性的教学展示
+                        const folder = currentSkin === 'pig' ? 'PIG_B' : 'DOVE_B';
+                        
+                        // 映射说明书的 id 到实际的图片文件名（'boss' 对应 '0.png'，其余武器对应其本身的数字 id）
+                        const imageId = currentWeapon.id;
+                        
+                        // 塞入带控制样式的图片标签
+                        cellEl.innerHTML = `<img src="${folder}/${imageId}.png" style="width:85%; height:85%; object-fit:contain;">`;
                     }
-                    // 2. 检查当前坐标是否是该武器的可移动点
+                    // 2. 检查当前坐标是否是该武器的可移动高亮虚线格
                     else {
                         const isHighlight = currentWeapon.moves.some(m => m[0] === r && m[1] === c);
                         if (isHighlight) {
@@ -801,7 +856,9 @@
                 if (selectedHandCard && selectedHandCard.player === 'red' && selectedHandCard.index === index) cardEl.classList.add('selected');
                 
                 // ✨ 核心修改：红方手牌读取 PIG_R 文件夹
-                cardEl.innerHTML = `<img src="PIG_R/${card.id}.png" class="card-img">`;
+                // 红方手牌逻辑内部修改：
+                const folder = currentSkin === 'pig' ? 'PIG_R' : 'DOVE_R'; // ✨ 动态判断皮肤文件夹
+                cardEl.innerHTML = `<img src="${folder}/${card.id}.png" class="card-img">`;
                 // <span>${card.name}</span>
                 cardEl.onclick = () => selectCard('red', index);
                 redHandDiv.appendChild(cardEl);
@@ -814,7 +871,8 @@
                 if (selectedHandCard && selectedHandCard.player === 'green' && selectedHandCard.index === index) cardEl.classList.add('selected');
                 
                 // ✨ 核心修改：绿方手牌读取 PIG_B 文件夹
-                cardEl.innerHTML = `<img src="PIG_B/${card.id}.png" class="card-img">`; 
+                const folder = currentSkin === 'pig' ? 'PIG_B' : 'DOVE_B'; // ✨ 动态判断皮肤文件夹
+                cardEl.innerHTML = `<img src="${folder}/${card.id}.png" class="card-img">`;
                 // <span>${card.name}</span>
                 
                 cardEl.onclick = () => selectCard('green', index);
@@ -916,10 +974,15 @@
                             pieceEl.classList.add('active-select');
                         }
                         
-                        // ✨ 核心修改：根据棋子所属阵营，动态拼出图片路径（红方读 R，绿方读 B）
-                        const folder = piece.player === 'red' ? 'PIG_R' : 'PIG_B';
+                        // ✨ 核心修复：根据当前阵营 AND 当前皮肤，动态拼出四种可能的文件夹：PIG_R, PIG_B, DOVE_R, DOVE_B
+                        let folder;
+                        if (currentSkin === 'pig') {
+                            folder = piece.player === 'red' ? 'PIG_R' : 'PIG_B';
+                        } else {
+                            folder = piece.player === 'red' ? 'DOVE_R' : 'DOVE_B';
+                        }
+                        
                         pieceEl.innerHTML = `<img src="${folder}/${piece.id}.png" class="piece-img">`;
-                        // <span class="piece-name">${piece.name}</span>
                         cellEl.appendChild(pieceEl);
                     }
 
@@ -1253,16 +1316,20 @@
                 redHandContainer.classList.remove('active-turn-hand');
             }
 
-            // 3. ✨ 【硬核换色】：直接让 JS 动态更换最底层的猪鼻水印图片路径
-            // 💡 这里的路径配置逻辑：
-            // 红方回合：读取红方文件夹的 0.png 大佬头像（自带红色背景）做淡淡的水印
-            // 绿方回合：读取绿方文件夹的 0.png 大佬头像（自带绿色背景）做淡淡的水印
-            const folder = currentTurn === 'red' ? 'PIG_R' : 'PIG_B';
+            // 3. ✨【动态换肤与变色双重联动】
+            // 根据当前是红方还是绿方决定读取 R 还是 B 文件夹
+            const folder = currentTurn === 'red' ? 'R' : 'B';
             
-            // 如果你想用特定某张纯猪鼻图片，可以把下面的 0.png 换成你准备好的图片文件名
-            const targetNoseUrl = `${folder}/0.png`; 
+            let targetNoseUrl;
+            if (currentSkin === 'pig') {
+                // 猪猪皮肤模式：读取 PIG_R/0.png 或 PIG_B/0.png
+                targetNoseUrl = `PIG_${folder}/0.png`; 
+            } else {
+                // 鸽子皮肤模式：读取 DOVE_R/0.png 或 DOVE_B/0.png
+                targetNoseUrl = `DOVE_${folder}/0.png`; 
+            }
 
-            // 执行样式穿透替换
+            // 执行样式穿透替换（无需移除旧标签，直接用 .innerHTML 覆盖，确保不中断）
             const styleEl = document.getElementById('dynamic-watermark-style') || document.createElement('style');
             styleEl.id = 'dynamic-watermark-style';
             styleEl.innerHTML = `.board-container::before { background-image: url('${targetNoseUrl}') !important; }`;
