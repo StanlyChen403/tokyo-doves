@@ -536,6 +536,13 @@
             line-height: 1.4;
             max-width: 280px;
         }
+
+        /* ✨ 新增：手牌与棋盘棋子的图片样式 */
+        .card-img, .piece-img {
+            width: 95%;       /* 让图片宽度占比变大 */
+            height: 95%;      /* 让图片高度占比变大 */
+            object-fit: contain;
+        }
     </style>
 </head>
 <body>
@@ -623,12 +630,20 @@
 
         
 
+        // const weaponTemplates = [
+        //     { id: 'machete', name: '砍刀', icon: '🔪', tip: '周围八向1格' },
+        //     { id: 'dagger',  name: '匕首', icon: '🗡️', tip: '上下左右1格' },
+        //     { id: 'pistol',  name: '手枪', icon: '🔫', tip: '斜角四向1格' },
+        //     { id: 'bat',     name: '棒球棍', icon: '🏏', tip: '直线任意格' },
+        //     { id: 'eagle',   name: '老鹰', icon: '🦅', tip: '日字跃迁' }
+        // ];
+
         const weaponTemplates = [
-            { id: 'machete', name: '砍刀', icon: '🔪', tip: '周围八向1格' },
-            { id: 'dagger',  name: '匕首', icon: '🗡️', tip: '上下左右1格' },
-            { id: 'pistol',  name: '手枪', icon: '🔫', tip: '斜角四向1格' },
-            { id: 'bat',     name: '棒球棍', icon: '🏏', tip: '直线任意格' },
-            { id: 'eagle',   name: '老鹰', icon: '🦅', tip: '日字跃迁' }
+            { id: '1', name: '砍刀', tip: '周围八向1格' },
+            { id: '2', name: '匕首', tip: '上下左右1格' },
+            { id: '3', name: '手枪', tip: '斜角四向1格' },
+            { id: '4', name: '棒球棍', tip: '直线任意格' },
+            { id: '5', name: '老鹰', tip: '日字跃迁' }
         ];
 
         let redHand = [];
@@ -752,8 +767,8 @@
             greenHand = [ ...weaponTemplates.map(w => ({ ...w, isBoss: false })) ];
 
             boardMap = {};
-            boardMap["0,0"] = { player: 'red', id: 'boss', name: '大佬', icon: '👑', isBoss: true, tip: '周围八向1格' };
-            boardMap["0,1"] = { player: 'green', id: 'boss', name: '大佬', icon: '👑', isBoss: true, tip: '周围八向1格' };
+            boardMap["0,0"] = { player: 'red', id: '0', name: '大佬', icon: '👑', isBoss: true, tip: '周围八向1格' };
+            boardMap["0,1"] = { player: 'green', id: '0', name: '大佬', icon: '👑', isBoss: true, tip: '周围八向1格' };
 
             // 刷新分数板显示
             document.getElementById('score-red-text').innerText = `🔴 红方 ${redScore}`;
@@ -776,7 +791,10 @@
                 const cardEl = document.createElement('div');
                 cardEl.className = `card red-card`;
                 if (selectedHandCard && selectedHandCard.player === 'red' && selectedHandCard.index === index) cardEl.classList.add('selected');
-                cardEl.innerHTML = `<span class="card-icon">${card.icon}</span>${card.name}`;
+                
+                // ✨ 核心修改：红方手牌读取 PIG_R 文件夹
+                cardEl.innerHTML = `<img src="PIG_R/${card.id}.png" class="card-img">`;
+                // <span>${card.name}</span>
                 cardEl.onclick = () => selectCard('red', index);
                 redHandDiv.appendChild(cardEl);
             });
@@ -786,7 +804,11 @@
                 const cardEl = document.createElement('div');
                 cardEl.className = `card green-card`;
                 if (selectedHandCard && selectedHandCard.player === 'green' && selectedHandCard.index === index) cardEl.classList.add('selected');
-                cardEl.innerHTML = `<span class="card-icon">${card.icon}</span>${card.name}`;
+                
+                // ✨ 核心修改：绿方手牌读取 PIG_B 文件夹
+                cardEl.innerHTML = `<img src="PIG_B/${card.id}.png" class="card-img">`; 
+                // <span>${card.name}</span>
+                
                 cardEl.onclick = () => selectCard('green', index);
                 greenHandDiv.appendChild(cardEl);
             });
@@ -885,7 +907,11 @@
                         if (selectedBoardPiece && selectedBoardPiece.r === r && selectedBoardPiece.c === c) {
                             pieceEl.classList.add('active-select');
                         }
-                        pieceEl.innerHTML = `<span class="piece-icon">${piece.icon}</span><span class="piece-name">${piece.name}</span>`;
+                        
+                        // ✨ 核心修改：根据棋子所属阵营，动态拼出图片路径（红方读 R，绿方读 B）
+                        const folder = piece.player === 'red' ? 'PIG_R' : 'PIG_B';
+                        pieceEl.innerHTML = `<img src="${folder}/${piece.id}.png" class="piece-img">`;
+                        // <span class="piece-name">${piece.name}</span>
                         cellEl.appendChild(pieceEl);
                     }
 
@@ -970,14 +996,23 @@
                     let valid = false;
 
                     switch (piece.id) {
-                        case 'boss':    
-                        case 'machete': valid = Math.abs(rowDiff) <= 1 && Math.abs(colDiff) <= 1; break;
-                        case 'dagger':  valid = (Math.abs(rowDiff) === 1 && colDiff === 0) || (rowDiff === 0 && Math.abs(colDiff) === 1); break;
-                        case 'pistol':  valid = Math.abs(rowDiff) === 1 && Math.abs(colDiff) === 1; break;
-                        case 'bat':     if (rowDiff === 0 || colDiff === 0) valid = isPathClear(startRow, startCol, r, c); break;
-                        case 'eagle':   valid = (Math.abs(rowDiff) === 2 && Math.abs(colDiff) === 1) || (Math.abs(rowDiff) === 1 && Math.abs(colDiff) === 2); break;
+                        case '0': // ✨ 将 'boss' 改为 '0'
+                        case '1': // ✨ 将 'machete' 改为 '1'
+                            valid = Math.abs(rowDiff) <= 1 && Math.abs(colDiff) <= 1; 
+                            break;
+                        case '2': // ✨ 将 'dagger' 改为 '2'
+                            valid = (Math.abs(rowDiff) === 1 && colDiff === 0) || (rowDiff === 0 && Math.abs(colDiff) === 1); 
+                            break;
+                        case '3': // ✨ 将 'pistol' 改为 '3'
+                            valid = Math.abs(rowDiff) === 1 && Math.abs(colDiff) === 1; 
+                            break;
+                        case '4': // ✨ 将 'bat' 改为 '4'
+                            if (rowDiff === 0 || colDiff === 0) valid = isPathClear(startRow, startCol, r, c); 
+                            break;
+                        case '5': // ✨ 将 'eagle' 改为 '5'
+                            valid = (Math.abs(rowDiff) === 2 && Math.abs(colDiff) === 1) || (Math.abs(rowDiff) === 1 && Math.abs(colDiff) === 2); 
+                            break;
                     }
-
                     if (valid) {
                         let testMap = { ...boardMap };
                         delete testMap[`${startRow},${startCol}`];
