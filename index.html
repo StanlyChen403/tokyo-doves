@@ -18,16 +18,6 @@
             transition: background-color 0.4s ease; /* 顺滑的背景色过渡 */
         }
 
-        /* 当是红方回合时，大背景变淡红引导 */
-        body.red-turn-bg {
-            background-color: #fff0f0;
-        }
-
-        /* 当是绿方回合时，大背景变淡绿引导 */
-        body.green-turn-bg {
-            background-color: #f0fbf4;
-        }
-
         /* ✨ 新增：顶部优雅的记分板 */
         .score-board {
             display: flex;
@@ -224,22 +214,40 @@
             transition: background 0.2s;
         }
 
-        /* 动态战场容器 */
+        /* 动态战场容器：基础定位 */
         .board-container {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 10px;
-            overflow: hidden;
+            padding: 10px; 
+            overflow: hidden;  
+            position: relative; /* 保持相对定位，作为伪元素的基准 */  
         }
 
+        /* ✨ 核心隔离黑科技：创建单独的水印图层，绝对不影响上层棋子 */
+        .board-container::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 160px;
+            opacity: 0.08; /* ✨ 在这里死死锁住 0.08 的极淡透明度，保证只是个影子 */
+            transition: background-image 0.4s ease; /* 换回合时，猪鼻子平滑淡入淡出切换 */
+            pointer-events: none;
+        }
+
+        /* 确保战场的真正棋盘格子浮在水印上方 */
         .battle-board {
-            display: grid;
-            gap: 8px;
-            background-color: transparent; 
-            box-sizing: border-box;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 1; /* 强行把棋子图层抬高，压在水印上面 */
+            display: grid;  
+            gap: 8px;  
+            background-color: transparent;  
+            box-sizing: border-box;  
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);  
         }
 
         /* 棋盘格子平时完全隐形 */
@@ -1233,19 +1241,32 @@
                 document.getElementById('turn-text').innerHTML = `当前回合：🟢 绿方${firstHandTag}`;
             }
 
-            // 2. ✨ 精准操控手牌区域的高亮切换
+            // 2. 精准操控手牌区域的高亮切换
             const redHandContainer = document.getElementById('red-hand').closest('.hand-container');
             const greenHandContainer = document.getElementById('green-hand').closest('.hand-container');
-
+            
             if (currentTurn === 'red') {
-                // 红方回合：红方手牌区亮起淡黄高光，绿方手牌区熄灭
                 redHandContainer.classList.add('active-turn-hand');
                 greenHandContainer.classList.remove('active-turn-hand');
             } else {
-                // 绿方回合：绿方手牌区亮起淡黄高光，红方手牌区熄灭
                 greenHandContainer.classList.add('active-turn-hand');
                 redHandContainer.classList.remove('active-turn-hand');
             }
+
+            // 3. ✨ 【硬核换色】：直接让 JS 动态更换最底层的猪鼻水印图片路径
+            // 💡 这里的路径配置逻辑：
+            // 红方回合：读取红方文件夹的 0.png 大佬头像（自带红色背景）做淡淡的水印
+            // 绿方回合：读取绿方文件夹的 0.png 大佬头像（自带绿色背景）做淡淡的水印
+            const folder = currentTurn === 'red' ? 'PIG_R' : 'PIG_B';
+            
+            // 如果你想用特定某张纯猪鼻图片，可以把下面的 0.png 换成你准备好的图片文件名
+            const targetNoseUrl = `${folder}/0.png`; 
+
+            // 执行样式穿透替换
+            const styleEl = document.getElementById('dynamic-watermark-style') || document.createElement('style');
+            styleEl.id = 'dynamic-watermark-style';
+            styleEl.innerHTML = `.board-container::before { background-image: url('${targetNoseUrl}') !important; }`;
+            if (!styleEl.parentNode) document.head.appendChild(styleEl);
         }
     </script>
 </body>
