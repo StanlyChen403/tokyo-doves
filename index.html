@@ -122,8 +122,16 @@
             background-color: #ffffff;
             border: 1px solid #e1e8ed;
             border-radius: 12px;
-            padding: 10px;
+            padding: 16px 10px 10px 10px; /* ✨ 修改：把顶部内边距从 10px 增加到 16px，给卡牌预留向上的弹跳高度 */
             box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            transition: all 0.3s ease; /* 让被激活时的放大动画也更平滑 */
+        }
+
+        .hand-container.active-turn-hand {
+            background-color: #fffdf0 !important; /* 极淡的优雅象牙黄 */
+            border: 2px solid #f1c40f !important;  /* 温暖的金黄色边框 */
+            box-shadow: 0 0 15px rgba(241, 196, 15, 0.25); /* 淡淡的金光外发散 */
+            transform: scale(1.01); /* 微妙的放大浮动感，增加立体感 */
         }
         
         .hand-title {
@@ -139,6 +147,8 @@
             display: flex;
             gap: 6px;
             overflow-x: auto;
+            overflow-y: visible; /* ✨ 新增：允许卡牌在垂直方向上溢出容器显示，绝不切头 */
+            padding-top: 8px;    /* ✨ 新增：微调顶部间距，让卡牌阴影更完美 */
             padding-bottom: 4px;
             min-height: 72px;
         }
@@ -1178,18 +1188,28 @@
         }
 
         function updateTurnText() {
-            // 更新提示文字，同时标注出谁是随机到的幸运先手
             const isFirstTurn = (redHand.length === 5 && greenHand.length === 5 && Object.keys(boardMap).length === 2);
             const firstHandTag = isFirstTurn ? '（随机先手）' : '';
 
+            // 1. 恢复顶部导航栏文字
             if (currentTurn === 'red') {
                 document.getElementById('turn-text').innerHTML = `当前回合：🔴 红方${firstHandTag}`;
-                // ✨ 改进二：引导大背景变红
-                document.body.className = 'red-turn-bg';
             } else {
                 document.getElementById('turn-text').innerHTML = `当前回合：🟢 绿方${firstHandTag}`;
-                // ✨ 改进二：引导大背景变绿
-                document.body.className = 'green-turn-bg';
+            }
+
+            // 2. ✨ 精准操控手牌区域的高亮切换
+            const redHandContainer = document.getElementById('red-hand').closest('.hand-container');
+            const greenHandContainer = document.getElementById('green-hand').closest('.hand-container');
+
+            if (currentTurn === 'red') {
+                // 红方回合：红方手牌区亮起淡黄高光，绿方手牌区熄灭
+                redHandContainer.classList.add('active-turn-hand');
+                greenHandContainer.classList.remove('active-turn-hand');
+            } else {
+                // 绿方回合：绿方手牌区亮起淡黄高光，红方手牌区熄灭
+                greenHandContainer.classList.add('active-turn-hand');
+                redHandContainer.classList.remove('active-turn-hand');
             }
         }
     </script>
