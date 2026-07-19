@@ -338,60 +338,80 @@
         }
 
         /* 游戏结束大弹窗 */
+        /* ==========================================================================
+           ✨ 优化：方向二——底端滑入式无遮挡结算面板样式
+           ========================================================================== */
         .game-over-overlay {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(44, 62, 80, 0.95);
+            bottom: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(44, 62, 80, 0.4); /* 背景不再死黑，变清透，利于全局复盘 */
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
+            justify-content: flex-end; /* ✨ 核心：强行沉到底部，给战场腾出完美的空间 */
             z-index: 10;
-            transition: all 0.3s ease; /* 增加平滑动画 */
+            pointer-events: none; /* 允许手指透过非卡片区域触摸战场 */
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1); /* 弹性优雅过渡 */
         }
 
-        /* ✨ 新增：复盘观看死因模式 */
-        .game-over-overlay.review-mode {
-            background-color: rgba(44, 62, 80, 0.2); /* 背景变极度透明 */
-            justify-content: flex-end; /* 弹窗盒子沉到底部，把战场空出来 */
-            padding-bottom: 20px;
-            pointer-events: none; /* 允许手指透过空隙点击棋盘（如果需要） */
+        /* 触发显示状态 */
+        .game-over-overlay.show-panel {
+            opacity: 1;
+            visibility: visible;
         }
 
-        /* 确保弹窗内的盒子在复盘模式下依然可以点击按钮 */
-        .game-over-overlay.review-mode .game-over-box {
-            pointer-events: auto;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            background: rgba(255, 255, 255, 0.95); /* 略带一点毛玻璃高级感 */
-            color: #2c3e50 !important; /* ✨ 新增这行：强行让复盘时的文字变成清晰的深蓝色 */
+        /* 结算内容大卡片：像系统抽屉一样从最底部弹起 */
+        .game-over-box {
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(10px); /* 带来果冻毛玻璃高级感 */
+            width: 100%;
+            border-radius: 20px 20px 0 0; /* 上圆角，贴合底边缘 */
+            padding: 20px 16px;
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+            box-sizing: border-box;
+            text-align: center;
+            pointer-events: auto; /* 保证卡片内部按钮可以正常点击 */
+            transform: translateY(100%); /* 默认藏在屏幕正下方 */
+            transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.15);
         }
 
-        /* 复盘/查看战场按钮样式 */
-        .review-btn {
-            margin-top: 15px;
-            margin-right: 8px;
-            padding: 10px 16px;
-            background-color: #7f8c8d;
-            color: white;
-            border: none;
-            font-size: 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
+        /* 当卡片激活时，抽屉平滑弹上来 */
+        .game-over-overlay.show-panel .game-over-box {
+            transform: translateY(0);
         }
+
+        /* 内部排版美化 */
+        #winner-title {
+            margin: 0 0 6px 0;
+            font-size: 1.4rem;
+            color: #2c3e50;
+            font-weight: 800;
+        }
+
+        #winner-reason {
+            color: #7f8c8d;
+            margin: 0 0 16px 0;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* 按钮重排，紧凑清爽 */
         .restart-btn {
-            margin-top: 15px;
-            padding: 10px 24px;
+            margin-top: 0;
+            width: 80%;
+            padding: 11px 0;
             background-color: #2ecc71;
             color: white;
             border: none;
-            font-size: 1rem;
-            border-radius: 8px;
+            font-size: 0.95rem;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: bold;
-            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.2);
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+            transition: background 0.2s;
         }
+        .restart-btn:hover { background-color: #27ae60; }
 
         /* 👑 规则图鉴全屏弹窗 */
         .rules-overlay {
@@ -586,10 +606,10 @@
 
     <div class="phone-container">
         <!-- 游戏结束弹窗 -->
-        <div class="game-over-overlay" id="game-over-screen" style="display: none;">
+        <div class="game-over-overlay" id="game-over-screen">
             <div class="game-over-box">
-                <h2 id="winner-title" style="margin: 0 0 10px 0; font-size: 1.6rem;">🎉 红方获胜！</h2>
-                <p id="winner-reason" style="color: #7f8c8d; margin: 0; font-size: 0.9rem;">对方大佬已被彻底合围！</p>
+                <h2 id="winner-title">🎉 红方获胜！</h2>
+                <p id="winner-reason">对方大佬已被彻底合围！</p>
                 <button class="restart-btn" onclick="resetGame()">再来一局</button>
             </div>
         </div>
@@ -826,31 +846,37 @@
         }
 
         function resetGame() {
-            // ✨ 改进一：随机决定谁是先手
             currentTurn = Math.random() < 0.5 ? 'red' : 'green';
             
             selectedHandCard = null;
             selectedBoardPiece = null;
             movableCells = [];
             isGameOver = false;
-            document.getElementById('game-over-screen').style.display = 'none';
+
+            // ✨ 新增：关闭下一局时，面板平滑滑下隐藏
+            const screen = document.getElementById('game-over-screen');
+            if (screen) {
+                screen.classList.remove('show-panel');
+                setTimeout(() => { screen.style.display = 'none'; }, 400);
+            }
+            
             toggleRules(false); 
 
             redHand = [ ...weaponTemplates.map(w => ({ ...w, isBoss: false })) ];
             greenHand = [ ...weaponTemplates.map(w => ({ ...w, isBoss: false })) ];
 
             boardMap = {};
+            // 保持一上一下对立
             boardMap["0,0"] = { player: 'red', id: '0', name: '大佬', icon: '👑', isBoss: true, tip: '周围八向1格' };
             boardMap["1,0"] = { player: 'green', id: '0', name: '大佬', icon: '👑', isBoss: true, tip: '周围八向1格' };
 
-            // 刷新分数板显示
             document.getElementById('score-red-text').innerText = `🔴 红方 ${redScore}`;
             document.getElementById('score-green-text').innerText = `${greenScore} 🟢 绿方`;
 
             renderHands();
             renderDynamicBoard();
             updateActionPanel();
-            updateTurnText(); // 里面包含背景颜色引导逻辑
+            updateTurnText();
         }
 
         window.onload = resetGame;
@@ -1237,22 +1263,12 @@
             document.getElementById('winner-reason').innerText = reason;
             
             const screen = document.getElementById('game-over-screen');
-            screen.classList.remove('review-mode'); // 每次刚结束时，确保是全屏震撼展示
             screen.style.display = 'flex';
-
-            // 动态注入“查看棋盘/死因”的切换按钮，防止重复叠加
-            const box = screen.querySelector('.game-over-box');
-            if (!document.getElementById('toggle-review-btn')) {
-                const reviewBtn = document.createElement('button');
-                reviewBtn.id = 'toggle-review-btn';
-                reviewBtn.className = 'review-btn';
-                reviewBtn.innerText = '查看死因';
-                reviewBtn.onclick = toggleReviewMode;
-                // 把查看死因按钮插在“再来一局”的前面
-                box.insertBefore(reviewBtn, box.querySelector('.restart-btn'));
-            } else {
-                document.getElementById('toggle-review-btn').innerText = '查看死因';
-            }
+            
+            // 🚨 核心黑科技：利用 class 激活，让面板产生从最底下丝滑滑入的动画
+            setTimeout(() => {
+                screen.classList.add('show-panel');
+            }, 50);
         }
 
         // ✨ 核心黑科技：一键切换“全屏结算”与“底部透明复盘”
